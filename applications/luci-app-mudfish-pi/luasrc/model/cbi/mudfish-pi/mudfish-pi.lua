@@ -15,17 +15,12 @@ s.extedit = luci.dispatcher.build_url(
    "admin", "services", "mudfish-pi", "basic", "%s"
 )
 
-function s.parse(self, section)
-end
-
-function s.create(self, name)
-end
-
 s:option(Flag, "enabled", translate("Enabled"))
 
 local active = s:option(DummyValue, "_active", translate("Started"))
+
 function active.cfgvalue(self, section)
-   local pid = sys.exec("%s | grep %s | grep mudfish | grep -v grep | awk '{print $1}'" % { psstring,section} )
+   local pid = sys.exec("%s | grep mudfish | grep -v grep | awk '{print $1}'" % { psstring } )
    if pid and #pid > 0 and tonumber(pid) ~= nil then
       return (sys.process.signal(pid, 0))
 	 and translatef("yes (%i)", pid)
@@ -39,7 +34,7 @@ updown._state = false
 updown.redirect = luci.dispatcher.build_url("admin", "services", "mudfish-pi")
 
 function updown.cbid(self, section)
-   local pid = sys.exec("%s | grep %s | grep mudfish | grep -v grep | awk '{ print $1 }'" % { psstring, section })
+   local pid = sys.exec("%s | grep mudfish | grep -v grep | awk '{ print $1 }'" % { psstring })
    self._state = pid and #pid > 0 and sys.process.signal(pid, 0)
    self.option = self._state and "stop" or "start"
    return AbstractValue.cbid(self, section)
@@ -52,10 +47,9 @@ end
 
 function updown.write(self, section, value)
    if self.option == "stop" then
-      local pid = sys.exec("%s | grep %s | grep mudfish | grep -v grep | awk '{print $1}'" % { psstring, section })
-      sys.process.signal(pid, 15)
+      luci.sys.call("/etc/init.d/mudfish-pi stop")
    else
-      luci.sys.call("/etc/init.d/mudfish-pi start %s" % section)
+      luci.sys.call("/etc/init.d/mudfish-pi start")
    end
    luci.http.redirect(self.redirect)
 end
