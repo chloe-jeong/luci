@@ -5,5 +5,5 @@
 module("luci.controller.mudfish-pi", package.seeall)
 
 function index()
-	entry( {"admin", "services", "mudfish-pi"}, cbi("mudfish-pi"), _("Mudfish") )
+   entry({"admin", "services", "mudfish-pi"}, cbi("mudfish-pi"), _("Mudfish"))
 end

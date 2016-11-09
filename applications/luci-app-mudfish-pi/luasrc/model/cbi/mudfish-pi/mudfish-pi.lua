@@ -4,116 +4,74 @@
 local fs  = require "nixio.fs"
 local sys = require "luci.sys"
 local uci = require "luci.model.uci".cursor()
-local testfullps = luci.sys.exec("ps --help 2>&1 | grep BusyBox") --check which ps do we have
-local psstring = (string.len(testfullps)>0) and  "ps w" or  "ps axfw" --set command we use to get pid
+local testfullps = luci.sys.exec("ps --help 2>&1 | grep BusyBox")
+local psstring = (string.len(testfullps) > 0) and "ps w" or "ps axfw"
 
 local m = Map("mudfish-pi", translate("Mudfish"))
-local s = m:section( TypedSection, "mudfish-pi", translate("Mudfish instances"), translate("Below is a list of configured Mudfish instances and their current state") )
-s.template = "cbi/tblsection"
-s.template_addremove = "mudfish-pi/cbi-select-input-add"
-s.addremove = true
-s.add_select_options = { }
+local s = m:section(TypedSection, "mudfish-pi",
+		    translate("Mudfish instances"),
+		    translate("Below is a list of configured Mudfish instances and their current state"))
 s.extedit = luci.dispatcher.build_url(
 	"admin", "services", "mudfish-pi", "basic", "%s"
 )
 
-uci:load("mudfish-pi-recipes")
-uci:foreach( "mudfish-pi-recipes", "mudfish_pi_recipe",
-	function(section)
-		s.add_select_options[section['.name']] =
-			section['_description'] or section['.name']
-	end
-)
-
 function s.parse(self, section)
-	local recipe = luci.http.formvalue(
-		luci.cbi.CREATE_PREFIX .. self.config .. "." ..
-		self.sectiontype .. ".select"
-	)
-
-	if recipe and not s.add_select_options[recipe] then
-		self.invalid_cts = true
-	else
-		TypedSection.parse( self, section )
-	end
 end
 
 function s.create(self, name)
-	local recipe = luci.http.formvalue(
-		luci.cbi.CREATE_PREFIX .. self.config .. "." ..
-		self.sectiontype .. ".select"
-	)
-	name = luci.http.formvalue(
-		luci.cbi.CREATE_PREFIX .. self.config .. "." ..
-		self.sectiontype .. ".text"
-	)
-	if string.len(name)>3 and not name:match("[^a-zA-Z0-9_]") then
-		uci:section(
-			"mudfish-pi", "mudfish-pi", name,
-			uci:get_all( "mudfish-pi-recipes", recipe )
-		)
-
-		uci:delete("mudfish-pi", name, "_role")
-		uci:delete("mudfish-pi", name, "_description")
-		uci:save("mudfish-pi")
-
-		luci.http.redirect( self.extedit:format(name) )
-	else
-		self.invalid_cts = true
-	end
 end
 
+s:option(Flag, "enabled", translate("Enabled"))
 
-s:option( Flag, "enabled", translate("Enabled") )
-
-local active = s:option( DummyValue, "_active", translate("Started") )
+local active = s:option(DummyValue, "_active", translate("Started"))
 function active.cfgvalue(self, section)
-	local pid = sys.exec("%s | grep %s | grep mudfish-pi | grep -v grep | awk '{print $1}'" % { psstring,section} )
-	if pid and #pid > 0 and tonumber(pid) ~= nil then
-		return (sys.process.signal(pid, 0))
-			and translatef("yes (%i)", pid)
-			or  translate("no")
-	end
-	return translate("no")
+   local pid = sys.exec("%s | grep %s | grep mudfish-pi | grep -v grep | awk '{print $1}'" % { psstring,section} )
+   if pid and #pid > 0 and tonumber(pid) ~= nil then
+      return (sys.process.signal(pid, 0))
+	 and translatef("yes (%i)", pid)
+	 or  translate("no")
+   end
+   return translate("no")
 end
 
 local updown = s:option( Button, "_updown", translate("Start/Stop") )
 updown._state = false
-updown.redirect = luci.dispatcher.build_url(
-	"admin", "services", "mudfish-pi"
-)
+updown.redirect = luci.dispatcher.build_url("admin", "services", "mudfish-pi")
+
 function updown.cbid(self, section)
-	local pid = sys.exec("%s | grep %s | grep mudfish-pi | grep -v grep | awk '{print $1}'" % { psstring,section} )
-	self._state = pid and #pid > 0 and sys.process.signal(pid, 0)
-	self.option = self._state and "stop" or "start"
-	return AbstractValue.cbid(self, section)
-end
-function updown.cfgvalue(self, section)
-	self.title = self._state and "stop" or "start"
-	self.inputstyle = self._state and "reset" or "reload"
-end
-function updown.write(self, section, value)
-	if self.option == "stop" then
-		local pid = sys.exec("%s | grep %s | grep mudfish-pi | grep -v grep | awk '{print $1}'" % { psstring,section} )
-		sys.process.signal(pid,15)
-	else
-		luci.sys.call("/etc/init.d/mudfish-pi start %s" % section)
-	end
-	luci.http.redirect( self.redirect )
+   local pid = sys.exec("%s | grep %s | grep mudfish-pi | grep -v grep | awk '{print $1}'" % { psstring,section} )
+   self._state = pid and #pid > 0 and sys.process.signal(pid, 0)
+   self.option = self._state and "stop" or "start"
+   return AbstractValue.cbid(self, section)
 end
 
+function updown.cfgvalue(self, section)
+   self.title = self._state and "stop" or "start"
+   self.inputstyle = self._state and "reset" or "reload"
+end
+
+function updown.write(self, section, value)
+   if self.option == "stop" then
+      local pid = sys.exec("%s | grep %s | grep mudfish-pi | grep -v grep | awk '{print $1}'" % { psstring,section} )
+      sys.process.signal(pid,15)
+   else
+      luci.sys.call("/etc/init.d/mudfish-pi start %s" % section)
+   end
+   luci.http.redirect( self.redirect )
+end
 
 local port = s:option( DummyValue, "port", translate("Port") )
+
 function port.cfgvalue(self, section)
-	local val = AbstractValue.cfgvalue(self, section)
-	return val or "1194"
+   local val = AbstractValue.cfgvalue(self, section)
+   return val or "1194"
 end
 
 local proto = s:option( DummyValue, "proto", translate("Protocol") )
-function proto.cfgvalue(self, section)
-	local val = AbstractValue.cfgvalue(self, section)
-	return val or "udp"
-end
 
+function proto.cfgvalue(self, section)
+   local val = AbstractValue.cfgvalue(self, section)
+   return val or "udp"
+end
 
 return m
