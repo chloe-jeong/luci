@@ -34,12 +34,12 @@ function active.cfgvalue(self, section)
    return translate("no")
 end
 
-local updown = s:option( Button, "_updown", translate("Start/Stop") )
+local updown = s:option(Button, "_updown", translate("Start/Stop"))
 updown._state = false
 updown.redirect = luci.dispatcher.build_url("admin", "services", "mudfish-pi")
 
 function updown.cbid(self, section)
-   local pid = sys.exec("%s | grep %s | grep mudfish | grep -v grep | awk '{print $1}'" % { psstring,section} )
+   local pid = sys.exec("%s | grep %s | grep mudfish | grep -v grep | awk '{ print $1 }'" % { psstring, section })
    self._state = pid and #pid > 0 and sys.process.signal(pid, 0)
    self.option = self._state and "stop" or "start"
    return AbstractValue.cbid(self, section)
@@ -52,26 +52,12 @@ end
 
 function updown.write(self, section, value)
    if self.option == "stop" then
-      local pid = sys.exec("%s | grep %s | grep mudfish | grep -v grep | awk '{print $1}'" % { psstring,section} )
-      sys.process.signal(pid,15)
+      local pid = sys.exec("%s | grep %s | grep mudfish | grep -v grep | awk '{print $1}'" % { psstring, section })
+      sys.process.signal(pid, 15)
    else
       luci.sys.call("/etc/init.d/mudfish-pi start %s" % section)
    end
-   luci.http.redirect( self.redirect )
-end
-
-local port = s:option( DummyValue, "port", translate("Port") )
-
-function port.cfgvalue(self, section)
-   local val = AbstractValue.cfgvalue(self, section)
-   return val or "1194"
-end
-
-local proto = s:option( DummyValue, "proto", translate("Protocol") )
-
-function proto.cfgvalue(self, section)
-   local val = AbstractValue.cfgvalue(self, section)
-   return val or "udp"
+   luci.http.redirect(self.redirect)
 end
 
 return m
