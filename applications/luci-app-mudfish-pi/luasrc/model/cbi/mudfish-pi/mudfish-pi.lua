@@ -1,4 +1,4 @@
--- Copyright 2008 Steven Barth <steven@midlink.org>
+-- Copyright 2016 Weongyo Jeong <weongyo@gmail.com>
 -- Licensed to the public under the Apache License 2.0.
 
 local fs  = require "nixio.fs"
@@ -12,7 +12,7 @@ local s = m:section(TypedSection, "mudfish-pi",
 		    translate("Mudfish instances"),
 		    translate("Below is a list of configured Mudfish instances and their current state"))
 s.extedit = luci.dispatcher.build_url(
-	"admin", "services", "mudfish-pi", "basic", "%s"
+   "admin", "services", "mudfish-pi", "basic", "%s"
 )
 
 function s.parse(self, section)
