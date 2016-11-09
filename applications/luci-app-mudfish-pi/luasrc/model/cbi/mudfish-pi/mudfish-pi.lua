@@ -9,8 +9,8 @@ local psstring = (string.len(testfullps) > 0) and "ps w" or "ps axfw"
 
 local m = Map("mudfish-pi", translate("Mudfish"))
 local s = m:section(TypedSection, "mudfish-pi",
-		    translate("Mudfish instances"),
-		    translate("Below is a list of configured Mudfish instances and their current state"))
+		    translate("Basic Configuration"),
+		    translate("Below is a list of Mudfish configuration and current state"))
 s.extedit = luci.dispatcher.build_url(
    "admin", "services", "mudfish-pi", "basic", "%s"
 )
