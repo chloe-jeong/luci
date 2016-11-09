@@ -39,7 +39,7 @@ updown._state = false
 updown.redirect = luci.dispatcher.build_url("admin", "services", "mudfish-pi")
 
 function updown.cbid(self, section)
-   local pid = sys.exec("%s | grep %s | grep mudfish-pi | grep -v grep | awk '{print $1}'" % { psstring,section} )
+   local pid = sys.exec("%s | grep %s | grep mudfish | grep -v grep | awk '{print $1}'" % { psstring,section} )
    self._state = pid and #pid > 0 and sys.process.signal(pid, 0)
    self.option = self._state and "stop" or "start"
    return AbstractValue.cbid(self, section)
@@ -52,7 +52,7 @@ end
 
 function updown.write(self, section, value)
    if self.option == "stop" then
-      local pid = sys.exec("%s | grep %s | grep mudfish-pi | grep -v grep | awk '{print $1}'" % { psstring,section} )
+      local pid = sys.exec("%s | grep %s | grep mudfish | grep -v grep | awk '{print $1}'" % { psstring,section} )
       sys.process.signal(pid,15)
    else
       luci.sys.call("/etc/init.d/mudfish-pi start %s" % section)
