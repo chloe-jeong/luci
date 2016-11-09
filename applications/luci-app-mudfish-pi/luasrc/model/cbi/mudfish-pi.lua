@@ -7,18 +7,18 @@ local uci = require "luci.model.uci".cursor()
 local testfullps = luci.sys.exec("ps --help 2>&1 | grep BusyBox") --check which ps do we have
 local psstring = (string.len(testfullps)>0) and  "ps w" or  "ps axfw" --set command we use to get pid
 
-local m = Map("openvpn", translate("OpenVPN"))
-local s = m:section( TypedSection, "openvpn", translate("OpenVPN instances"), translate("Below is a list of configured OpenVPN instances and their current state") )
+local m = Map("mudfish-pi", translate("Mudfish"))
+local s = m:section( TypedSection, "mudfish-pi", translate("Mudfish instances"), translate("Below is a list of configured Mudfish instances and their current state") )
 s.template = "cbi/tblsection"
-s.template_addremove = "openvpn/cbi-select-input-add"
+s.template_addremove = "mudfish-pi/cbi-select-input-add"
 s.addremove = true
 s.add_select_options = { }
 s.extedit = luci.dispatcher.build_url(
-	"admin", "services", "openvpn", "basic", "%s"
+	"admin", "services", "mudfish-pi", "basic", "%s"
 )
 
-uci:load("openvpn_recipes")
-uci:foreach( "openvpn_recipes", "openvpn_recipe",
+uci:load("mudfish-pi-recipes")
+uci:foreach( "mudfish-pi-recipes", "mudfish_pi_recipe",
 	function(section)
 		s.add_select_options[section['.name']] =
 			section['_description'] or section['.name']
@@ -49,13 +49,13 @@ function s.create(self, name)
 	)
 	if string.len(name)>3 and not name:match("[^a-zA-Z0-9_]") then
 		uci:section(
-			"openvpn", "openvpn", name,
-			uci:get_all( "openvpn_recipes", recipe )
+			"mudfish-pi", "mudfish-pi", name,
+			uci:get_all( "mudfish-pi-recipes", recipe )
 		)
 
-		uci:delete("openvpn", name, "_role")
-		uci:delete("openvpn", name, "_description")
-		uci:save("openvpn")
+		uci:delete("mudfish-pi", name, "_role")
+		uci:delete("mudfish-pi", name, "_description")
+		uci:save("mudfish-pi")
 
 		luci.http.redirect( self.extedit:format(name) )
 	else
@@ -68,7 +68,7 @@ s:option( Flag, "enabled", translate("Enabled") )
 
 local active = s:option( DummyValue, "_active", translate("Started") )
 function active.cfgvalue(self, section)
-	local pid = sys.exec("%s | grep %s | grep openvpn | grep -v grep | awk '{print $1}'" % { psstring,section} )
+	local pid = sys.exec("%s | grep %s | grep mudfish-pi | grep -v grep | awk '{print $1}'" % { psstring,section} )
 	if pid and #pid > 0 and tonumber(pid) ~= nil then
 		return (sys.process.signal(pid, 0))
 			and translatef("yes (%i)", pid)
@@ -80,10 +80,10 @@ end
 local updown = s:option( Button, "_updown", translate("Start/Stop") )
 updown._state = false
 updown.redirect = luci.dispatcher.build_url(
-	"admin", "services", "openvpn"
+	"admin", "services", "mudfish-pi"
 )
 function updown.cbid(self, section)
-	local pid = sys.exec("%s | grep %s | grep openvpn | grep -v grep | awk '{print $1}'" % { psstring,section} )
+	local pid = sys.exec("%s | grep %s | grep mudfish-pi | grep -v grep | awk '{print $1}'" % { psstring,section} )
 	self._state = pid and #pid > 0 and sys.process.signal(pid, 0)
 	self.option = self._state and "stop" or "start"
 	return AbstractValue.cbid(self, section)
@@ -94,10 +94,10 @@ function updown.cfgvalue(self, section)
 end
 function updown.write(self, section, value)
 	if self.option == "stop" then
-		local pid = sys.exec("%s | grep %s | grep openvpn | grep -v grep | awk '{print $1}'" % { psstring,section} )
+		local pid = sys.exec("%s | grep %s | grep mudfish-pi | grep -v grep | awk '{print $1}'" % { psstring,section} )
 		sys.process.signal(pid,15)
 	else
-		luci.sys.call("/etc/init.d/openvpn start %s" % section)
+		luci.sys.call("/etc/init.d/mudfish-pi start %s" % section)
 	end
 	luci.http.redirect( self.redirect )
 end
