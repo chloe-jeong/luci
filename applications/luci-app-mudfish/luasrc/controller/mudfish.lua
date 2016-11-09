@@ -2,10 +2,10 @@
 -- Copyright 2008 Jo-Philipp Wich <jow@openwrt.org>
 -- Licensed to the public under the Apache License 2.0.
 
-module("luci.controller.openvpn", package.seeall)
+module("luci.controller.mudfish", package.seeall)
 
 function index()
-	entry( {"admin", "services", "openvpn"}, cbi("openvpn"), _("OpenVPN") )
-	entry( {"admin", "services", "openvpn", "basic"},    cbi("openvpn-basic"),    nil ).leaf = true
-	entry( {"admin", "services", "openvpn", "advanced"}, cbi("openvpn-advanced"), nil ).leaf = true
+	entry( {"admin", "services", "mudfish"}, cbi("mudfish"), _("Mudfish") )
+	entry( {"admin", "services", "mudfish", "basic"},    cbi("mudfish-basic"),    nil ).leaf = true
+	entry( {"admin", "services", "mudfish", "advanced"}, cbi("mudfish-advanced"), nil ).leaf = true
 end
