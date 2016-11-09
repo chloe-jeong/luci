@@ -1,5 +1,5 @@
-config mudfish_recipe server_tun_ptp
-	option _description		"Simple server configuration for a routed point-to-point VPN"
+config mudfish_pi_recipe server_tun_ptp
+	option _description		"Simple server configuration"
 	option _role			"server"
 	option dev			"tun"
 	option ifconfig			"10.0.0.1 10.0.0.2"
