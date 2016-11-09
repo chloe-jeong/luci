@@ -6,7 +6,7 @@
 
 include $(TOPDIR)/rules.mk
 
-LUCI_TITLE:=LuCI Support for Mudfish
+LUCI_TITLE:=LuCI Support for Mudfish PI.
 LUCI_DEPENDS:=
 
 include ../../luci.mk
