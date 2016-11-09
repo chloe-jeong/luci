@@ -30,7 +30,7 @@ local basicParams = {
 	{ Flag,"client_to_client",0, translate("Allow client-to-client traffic") },
 	{ DynamicList,"remote","vpnserver.example.org", translate("Remote host name or ip address") },
 
-	{ FileUpload,"secret","/etc/openvpn/secret.key 1", translate("Enable Static Key encryption mode (non-TLS)") },
+	{ FileUpload,"secret","/etc/mudfish-pi/secret.key 1", translate("Enable Static Key encryption mode (non-TLS)") },
 	{ FileUpload,"pkcs12","/etc/easy-rsa/keys/some-client.pk12", translate("PKCS#12 file containing keys") },
 	{ FileUpload,"ca","/etc/easy-rsa/keys/ca.crt", translate("Certificate authority") },
 	{ FileUpload,"dh","/etc/easy-rsa/keys/dh1024.pem", translate("Diffie Hellman parameters") },
@@ -39,15 +39,15 @@ local basicParams = {
 }
 
 
-local m = Map("openvpn")
+local m = Map("mudfish-pi")
 local p = m:section( SimpleSection )
 
-p.template = "openvpn/pageswitch"
+p.template = "mudfish-pi/pageswitch"
 p.mode     = "basic"
 p.instance = arg[1]
 
 
-local s = m:section( NamedSection, arg[1], "openvpn" )
+local s = m:section( NamedSection, arg[1], "mudfish-pi" )
 
 for _, option in ipairs(basicParams) do
 	local o = s:option(
