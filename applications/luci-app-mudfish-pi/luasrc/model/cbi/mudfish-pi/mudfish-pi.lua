@@ -25,7 +25,7 @@ s:option(Flag, "enabled", translate("Enabled"))
 
 local active = s:option(DummyValue, "_active", translate("Started"))
 function active.cfgvalue(self, section)
-   local pid = sys.exec("%s | grep %s | grep mudfish-pi | grep -v grep | awk '{print $1}'" % { psstring,section} )
+   local pid = sys.exec("%s | grep %s | grep mudfish | grep -v grep | awk '{print $1}'" % { psstring,section} )
    if pid and #pid > 0 and tonumber(pid) ~= nil then
       return (sys.process.signal(pid, 0))
 	 and translatef("yes (%i)", pid)
