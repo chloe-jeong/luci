@@ -71,9 +71,4 @@ function updown.write(self, section, value)
    luci.http.redirect(self.redirect)
 end
 
-local url = s:option(DummyValue, "_url", translate("URL"))
-function url.cfgvalue(self, section)
-   return "<a>http://192.168.1.1:8282"
-end
-
 return m
