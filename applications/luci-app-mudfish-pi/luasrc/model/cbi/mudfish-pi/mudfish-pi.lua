@@ -15,13 +15,30 @@ s.extedit = luci.dispatcher.build_url(
    "admin", "services", "mudfish-pi", "basic", "%s"
 )
 
-s:option(Flag, "enabled", translate("Enabled"))
+local e = s:option(Flag, "enabled", translate("Enabled"))
+function e.cfgvalue(self, section)
+   return luci.sys.init.enabled("mudfish-pi") and
+      self.enabled or self.disabled
+end
+
+function e.write(self, section, value)
+   if value == "1" then
+      luci.sys.call("/etc/init.d/mudfish-pi enable > /dev/null")
+      luci.sys.call("/etc/init.d/mudfish-pi start > /dev/null")
+   else
+      luci.sys.call("/etc/init.d/mudfish-pi stop > /dev/null")
+      luci.sys.call("/etc/init.d/mudfish-pi disable > /dev/null")
+   end
+end
 
 local active = s:option(DummyValue, "_active", translate("Started"))
 
 function active.cfgvalue(self, section)
    local pid = sys.exec("%s | grep mudfish | grep -v grep | awk '{print $1}'" % { psstring } )
    if pid and #pid > 0 and tonumber(pid) ~= nil then
+      local ipaddr = m.uci:get("network", "lan", "ipaddr")
+      self.description = [[<a href="]] .. "http://" .. ipaddr .. ":8282" ..
+	 [[">Mudfish Launcher UI</a>]]
       return (sys.process.signal(pid, 0))
 	 and translatef("yes (%i)", pid)
 	 or  translate("no")
@@ -52,6 +69,11 @@ function updown.write(self, section, value)
       luci.sys.call("/etc/init.d/mudfish-pi start")
    end
    luci.http.redirect(self.redirect)
+end
+
+local url = s:option(DummyValue, "_url", translate("URL"))
+function url.cfgvalue(self, section)
+   return "<a>http://192.168.1.1:8282"
 end
 
 return m
