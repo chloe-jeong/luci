@@ -34,7 +34,7 @@ end
 local active = s:option(DummyValue, "_active", translate("Started"))
 
 function active.cfgvalue(self, section)
-   local pid = sys.exec("%s | grep mudfish | grep -v grep | awk '{print $1}'" % { psstring } )
+   local pid = sys.exec("%s | grep mudrun | grep -v grep | head -1 | awk '{print $1}'" % { psstring } )
    if pid and #pid > 0 and tonumber(pid) ~= nil then
       local ipaddr = m.uci:get("network", "lan", "ipaddr")
       self.description = [[<a href="]] .. "http://" .. ipaddr .. ":8282" ..
@@ -51,7 +51,7 @@ updown._state = false
 updown.redirect = luci.dispatcher.build_url("admin", "services", "mudfish-pi")
 
 function updown.cbid(self, section)
-   local pid = sys.exec("%s | grep mudfish | grep -v grep | awk '{ print $1 }'" % { psstring })
+   local pid = sys.exec("%s | grep mudrun | grep -v grep | head -1 | awk '{ print $1 }'" % { psstring })
    self._state = pid and #pid > 0 and sys.process.signal(pid, 0)
    self.option = self._state and "stop" or "start"
    return AbstractValue.cbid(self, section)
