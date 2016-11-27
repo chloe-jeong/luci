@@ -16,9 +16,9 @@ s.extedit = luci.dispatcher.build_url(
 )
 
 local e = s:option(Flag, "enabled", translate("Enabled"))
+e.rmempty = false
 function e.cfgvalue(self, section)
-   return luci.sys.init.enabled("mudfish-pi") and
-      self.enabled or self.disabled
+   return luci.sys.init.enabled("mudfish-pi") and self.enabled or self.disabled
 end
 
 function e.write(self, section, value)
@@ -37,8 +37,8 @@ function active.cfgvalue(self, section)
    local pid = sys.exec("%s | grep mudrun | grep -v grep | head -1 | awk '{print $1}'" % { psstring } )
    if pid and #pid > 0 and tonumber(pid) ~= nil then
       local ipaddr = m.uci:get("network", "lan", "ipaddr")
-      self.description = [[<a href="]] .. "http://" .. ipaddr .. ":8282" ..
-	 [[">Mudfish Launcher UI</a>]]
+      self.description = [[<a target="_blank" href="]] .. "http://" ..
+	 ipaddr .. ":8282" .. [[">Mudfish Launcher UI</a>]]
       return (sys.process.signal(pid, 0))
 	 and translatef("yes (%i)", pid)
 	 or  translate("no")
