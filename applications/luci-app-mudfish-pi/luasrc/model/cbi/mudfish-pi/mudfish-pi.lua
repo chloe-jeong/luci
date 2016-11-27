@@ -1,5 +1,7 @@
+--
 -- Copyright 2016 Weongyo Jeong <weongyo@gmail.com>
 -- Licensed to the public under the Apache License 2.0.
+--
 
 local fs  = require "nixio.fs"
 local sys = require "luci.sys"
@@ -8,9 +10,16 @@ local testfullps = luci.sys.exec("ps --help 2>&1 | grep BusyBox")
 local psstring = (string.len(testfullps) > 0) and "ps w" or "ps axfw"
 
 local m = Map("mudfish-pi", translate("Mudfish"))
+
+-----------------------------------------------------------------------
+--
+-- BASIC CONFIGURATION
+--
+-----------------------------------------------------------------------
+
 local s = m:section(TypedSection, "mudfish-pi",
 		    translate("Basic Configuration"),
-		    translate("Below is a list of Mudfish configuration and current state"))
+		    translate("This shows Mudfish basic configuration and current state."))
 s.extedit = luci.dispatcher.build_url(
    "admin", "services", "mudfish-pi", "basic", "%s"
 )
@@ -38,7 +47,7 @@ function active.cfgvalue(self, section)
    if pid and #pid > 0 and tonumber(pid) ~= nil then
       local ipaddr = m.uci:get("network", "lan", "ipaddr")
       self.description = [[<a target="_blank" href="]] .. "http://" ..
-	 ipaddr .. ":8282" .. [[">Mudfish Launcher UI</a>]]
+        ipaddr .. ":8282" .. [[">]] .. translate("Mudfish Launcher") .. [[</a>]]
       return (sys.process.signal(pid, 0))
 	 and translatef("yes (%i)", pid)
 	 or  translate("no")
@@ -52,6 +61,51 @@ updown.redirect = luci.dispatcher.build_url("admin", "services", "mudfish-pi")
 
 function updown.cbid(self, section)
    local pid = sys.exec("%s | grep mudrun | grep -v grep | head -1 | awk '{ print $1 }'" % { psstring })
+   self._state = pid and #pid > 0 and sys.process.signal(pid, 0)
+   self.option = self._state and "stop" or "start"
+   return AbstractValue.cbid(self, section)
+end
+
+function updown.cfgvalue(self, section)
+   self.title = self._state and "stop" or "start"
+   self.inputstyle = self._state and "reset" or "reload"
+end
+
+function updown.write(self, section, value)
+   if self.option == "stop" then
+      luci.sys.call("/etc/init.d/mudfish-pi stop")
+   else
+      luci.sys.call("/etc/init.d/mudfish-pi start")
+   end
+   luci.http.redirect(self.redirect)
+end
+
+-----------------------------------------------------------------------
+--
+-- SUPPORT TUNNEL
+--
+-----------------------------------------------------------------------
+
+local s = m:section(TypedSection, "mudfish-pi-support", translate("Support"),
+		    translate("This shows menus for technical supports."))
+
+local opened = s:option(DummyValue, "_opened", translate("Opened"))
+function opened.cfgvalue(self, section)
+   local pid = sys.exec("%s | grep mudsupport | grep -v grep | head -1 | awk '{print $1}'" % { psstring } )
+   if pid and #pid > 0 and tonumber(pid) ~= nil then
+      return (sys.process.signal(pid, 0))
+	 and translatef("yes (%i)", pid)
+	 or  translate("no")
+   end
+   return translate("no")
+end
+
+local updown = s:option(Button, "_updown", translate("Start/Stop"))
+updown._state = false
+updown.redirect = luci.dispatcher.build_url("admin", "services", "mudfish-pi")
+
+function updown.cbid(self, section)
+   local pid = sys.exec("%s | grep mudsupport | grep -v grep | head -1 | awk '{ print $1 }'" % { psstring })
    self._state = pid and #pid > 0 and sys.process.signal(pid, 0)
    self.option = self._state and "stop" or "start"
    return AbstractValue.cbid(self, section)
