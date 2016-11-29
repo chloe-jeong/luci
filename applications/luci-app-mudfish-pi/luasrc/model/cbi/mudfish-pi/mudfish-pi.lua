@@ -127,7 +127,7 @@ function updown.write(self, section, value)
          luci.sys.call("/bin/kill -9 %s" % { ssh_pid })
       end
    else
-      os.execute("/opt/mudfish-pi/current/bin/mudsupport")
+      luci.sys.call("/opt/mudfish-pi/current/bin/mudsupport")
    end
    luci.http.redirect(self.redirect)
 end
