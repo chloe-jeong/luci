@@ -67,7 +67,7 @@ function updown.cbid(self, section)
 end
 
 function updown.cfgvalue(self, section)
-   self.title = self._state and "stop" or "start"
+   self.title = self._state and "Stop" or "Start"
    self.inputstyle = self._state and "reset" or "reload"
 end
 
@@ -115,7 +115,7 @@ function updown.cbid(self, section)
 end
 
 function updown.cfgvalue(self, section)
-   self.title = self._state and "stop" or "start"
+   self.title = self._state and "Stop" or "Start"
    self.inputstyle = self._state and "reset" or "reload"
 end
 
@@ -127,7 +127,7 @@ function updown.write(self, section, value)
          luci.sys.call("/bin/kill -9 %s" % { ssh_pid })
       end
    else
-      luci.sys.call("/opt/mudfish-pi/current/bin/mudsupport")
+      os.execute("/opt/mudfish-pi/current/bin/mudsupport")
    end
    luci.http.redirect(self.redirect)
 end
