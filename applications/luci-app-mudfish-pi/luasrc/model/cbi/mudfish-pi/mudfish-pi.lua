@@ -17,8 +17,7 @@ local m = Map("mudfish-pi", translate("Mudfish"))
 --
 -----------------------------------------------------------------------
 
-local s = m:section(TypedSection, "mudfish-pi",
-		    translate("Basic Configuration"),
+local s = m:section(TypedSection, "mudfish-pi", translate("Basic Configuration"),
 		    translate("This shows Mudfish basic configuration and current state."))
 s.extedit = luci.dispatcher.build_url(
    "admin", "services", "mudfish-pi", "basic", "%s"
@@ -27,7 +26,8 @@ s.extedit = luci.dispatcher.build_url(
 local e = s:option(Flag, "enabled", translate("Enabled"))
 e.rmempty = false
 function e.cfgvalue(self, section)
-   return luci.sys.init.enabled("mudfish-pi") and self.enabled or self.disabled
+   return luci.sys.init.enabled("mudfish-pi") and
+      self.enabled or self.disabled
 end
 
 function e.write(self, section, value)
@@ -46,13 +46,13 @@ function active.cfgvalue(self, section)
    local pid = sys.exec("%s | grep mudrun | grep -v grep | head -1 | awk '{print $1}'" % { psstring } )
    if pid and #pid > 0 and tonumber(pid) ~= nil then
       local ipaddr = m.uci:get("network", "lan", "ipaddr")
-      self.description = [[<a target="_blank" href="]] .. "http://" ..
-        ipaddr .. ":8282" .. [[">]] .. translate("Mudfish Launcher") .. [[</a>]]
+      self.description = [[<a target="_blank" href="]] .. "http://" .. ipaddr .. ":8282" ..
+	 [[">Mudfish Launcher UI</a>]]
       return (sys.process.signal(pid, 0))
-	 and translatef("yes (%i)", pid)
-	 or  translate("no")
+	 and translatef("Yes (%i)", pid)
+	 or  translate("No")
    end
-   return translate("no")
+   return translate("No")
 end
 
 local updown = s:option(Button, "_updown", translate("Start/Stop"))
@@ -93,11 +93,14 @@ local opened = s:option(DummyValue, "_opened", translate("Opened"))
 function opened.cfgvalue(self, section)
    local pid = sys.exec("%s | grep mudsupport | grep -v grep | head -1 | awk '{print $1}'" % { psstring } )
    if pid and #pid > 0 and tonumber(pid) ~= nil then
-      return (sys.process.signal(pid, 0))
-	 and translatef("yes (%i)", pid)
-	 or  translate("no")
+      if sys.process.signal(pid, 0) then
+         self.description = translatef("Your secure token is <b>%i</b>.", fs.readfile("/etc/mudfish-pi/mudsupport.token"))
+	 return translatef("Yes (%i)", pid)
+      else
+	 return translate("No")
+      end
    end
-   return translate("no")
+   return translate("No")
 end
 
 local updown = s:option(Button, "_updown", translate("Start/Stop"))
@@ -118,9 +121,13 @@ end
 
 function updown.write(self, section, value)
    if self.option == "stop" then
-      luci.sys.call("/etc/init.d/mudfish-pi stop")
+      luci.sys.call("/usr/bin/killall -9 mudsupport")
+      local ssh_pid = fs.readfile("/etc/mudfish-pi/mudsupport.ssh.pid")
+      if ssh_pid ~= nil then
+         luci.sys.call("/bin/kill -9 %s" % { ssh_pid })
+      end
    else
-      luci.sys.call("/etc/init.d/mudfish-pi start")
+      luci.sys.call("/opt/mudfish-pi/current/bin/mudsupport")
    end
    luci.http.redirect(self.redirect)
 end
