@@ -45,9 +45,12 @@ local active = s:option(DummyValue, "_active", translate("Started"))
 function active.cfgvalue(self, section)
    local pid = sys.exec("%s | grep mudrun | grep -v grep | head -1 | awk '{print $1}'" % { psstring } )
    if pid and #pid > 0 and tonumber(pid) ~= nil then
-      local ipaddr = m.uci:get("network", "lan", "ipaddr")
-      self.description = [[<a target="_blank" href="]] .. "http://" .. ipaddr .. ":8282" ..
-	 [[">Mudfish Launcher UI</a>]]
+      local ipport = fs.readfile("/tmp/.ipport")
+      if ipport == nil then
+	 ipport = m.uci:get("network", "lan", "ipaddr") .. ":8282"
+      end
+      self.description = [[<a target="_blank" href="]] .. "http://" ..
+	 ipport .. [[">Mudfish Launcher UI</a>]]
       return (sys.process.signal(pid, 0))
 	 and translatef("Yes (%i)", pid)
 	 or  translate("No")
