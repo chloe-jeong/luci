@@ -2727,7 +2727,7 @@ msgid "Service Type"
 msgstr ""
 
 msgid "Services"
-msgstr "Services"
+msgstr "서비스"
 
 msgid "Set up Time Synchronization"
 msgstr ""
