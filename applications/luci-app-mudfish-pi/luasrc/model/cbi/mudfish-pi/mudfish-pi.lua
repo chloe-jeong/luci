@@ -94,11 +94,17 @@ local s = m:section(TypedSection, "mudfish-pi-support", translate("Support"),
 
 local opened = s:option(DummyValue, "_opened", translate("Opened"))
 function opened.cfgvalue(self, section)
-   local pid = sys.exec("%s | grep mudsupport | grep -v grep | head -1 | awk '{print $1}'" % { psstring } )
+   local pid = sys.exec("%s | grep mudsupport | grep -v grep | grep -v ssh | head -1 | awk '{print $1}'" % { psstring } )
+
    if pid and #pid > 0 and tonumber(pid) ~= nil then
       if sys.process.signal(pid, 0) then
-         self.description = translatef("Your secure token is <b>%i</b>.", fs.readfile("/etc/mudfish-pi/mudsupport.token"))
-	 return translatef("Yes (%i)", pid)
+	 local token = fs.readfile("/etc/mudfish-pi/mudsupport.token")
+
+	 if token ~= nil then
+	    self.description = translatef("Your secure token is <b>%i</b>.",
+	      fs.readfile("/etc/mudfish-pi/mudsupport.token"))
+	 end
+	 return translatef("Yes (%i)", tonumber(pid))
       else
 	 return translate("No")
       end
@@ -111,7 +117,7 @@ updown._state = false
 updown.redirect = luci.dispatcher.build_url("admin", "services", "mudfish-pi")
 
 function updown.cbid(self, section)
-   local pid = sys.exec("%s | grep mudsupport | grep -v grep | head -1 | awk '{ print $1 }'" % { psstring })
+   local pid = sys.exec("%s | grep mudsupport | grep -v grep | grep -v ssh | head -1 | awk '{ print $1 }'" % { psstring })
    self._state = pid and #pid > 0 and sys.process.signal(pid, 0)
    self.option = self._state and "stop" or "start"
    return AbstractValue.cbid(self, section)
